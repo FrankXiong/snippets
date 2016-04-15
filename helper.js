@@ -1,5 +1,4 @@
 var helper = {
-    oFileNameHint : document.getElementsByClassName('file-name-hint')[0],
     text : function(e){
         var t="";
         e=e.childNodes||e;
