@@ -1,10 +1,5 @@
-define([],function(){
-
-    function Helper(){
-
-    }
-
-    Helper.prototype = {
+define(function(){
+    return {
         text : function(e){
             var t="";
             e=e.childNodes||e;
@@ -17,40 +12,37 @@ define([],function(){
         redirect : function(url){
             window.location.href = url;
         },
+        /** 
+        * 检查文件大小
+        * @param obj 文件对象
+        * @param maxSize 文件最大尺寸 
+        **/
         checkFileSize : function(obj,maxSize){
             var fileSize = obj.files[0].size;
             if(fileSize > maxSize){
-                alert(msg.fileOverSize);
                 obj.value = '';
-                this.oFileNameHint.innerHTML = '';
                 return false;
             }
             return true;  
         },
-        checkFileType : function(obj){
+        /** 
+        * 检查文件类型 
+        * @param obj 文件对象
+        * @param type 允许的类型 
+        **/
+        checkFileType : function(obj,type){
             var value = obj.value;
             var dot = value.lastIndexOf(".");
             var fileType = value.substring(dot + 1);
-            if(ALLOW_FILE_TYPE.indexOf(fileType) !== -1){
+            if(type.indexOf(fileType) !== -1){
                 return true;
             }else{
-                alert(msg.fileTypeIllegal);
                 obj.value = "";
-                this.oFileNameHint.innerHTML = '';
                 return false;
             }
         },
         getLength : function(str){
             return str.replace(/[^x00-xff]/g,'xx').length;
-        },
-        addEvent : function(target,type,handler){
-            if(target.addEventListener){
-                target.addEventListener(type,handler,false);
-            }else{
-                target.attachEvent('on'+type,function(event){
-                    return handler.call(target,event);
-                });
-            }
         },
         setDisabled : function(btn,el){
             btn.setAttribute('disabled','disabled');
@@ -63,18 +55,32 @@ define([],function(){
             var reg = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/;
             return reg.test(str);
         },
-        isHtml : function(str){
+        isInputEmpty : function(input){
+            var inputValue = input.val();
+            if(this.getLength(inputValue) === 0){
+                return true;
+            }
+            return false;
+        },
+        isHTML : function(str){
             var re = /<\s*(\S+)(\s[^>]*)?>[\s\S]*<\s*\/\1\s*>/;
             return re.test(str);
         },
         isFormEmpty : function(){
-            var selects = $('select');
+            var selects = $('input');
             for(var i = 0;i < selects.length;i++){
                 if(selects[i].value === ''){
-                    alert(msg.formEmpty);
                     return true;
                 }
             }
+            return false;
+        },
+        isPasswordInvalid : function(input){
+            var len = this.getLength(input.value);
+            if(len < 6){
+                return true;
+            }
+            return false;
         },
         hasClass : function(obj, cls) {  
             return obj.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));  
@@ -84,7 +90,7 @@ define([],function(){
                 obj.className += " " + cls;  
             }
         },
-        clog : function(value){
+        log : function(value){
             console.log(value);
         },
         removeClass : function(obj, cls) {  
@@ -116,11 +122,87 @@ define([],function(){
             else{
                 return 0; 
             }
+        },
+        //页面加载完成后注册onload事件
+        readyEvent:function(fn){
+            if(fn == null){
+                fn = document;
+            }
+            var oldonload = window.onload;
+            if(typeof window.onload != 'function'){
+                window.onload = fn;
+            }else{
+                // 如果window.onload上已有事件绑定，则追加到它的后面
+                window.onload = function(){
+                    oldonload();
+                    fn();
+                }
+            }
+        },
+        /** 
+        * 绑定事件
+        * @param target 事件触发源
+        * @param type 绑定的事件类型
+        * @param handler 处理函数
+        **/
+        bindEvent:function(target,type,handler){
+            if(target.addEventListener){
+                target.addEventListener(type,handler,false);
+            }else if(target.attachEvent){
+                target.attachEvent('on'+type,function(event){
+                    // IE attachEvent注册的事件作为函数调用，其this值是全局对象，需要用call来修改其指向
+                    return handler.call(target,event)
+                })
+            }else{
+                target['on'+type] = handler;
+            }
+        },
+        // 移除事件
+        removeEvent:function(target,type,handler){
+            if(target.removeEventListener){
+                target.removeEventListener(type,handler,false);
+            }else if(target.detachEvent){
+                target.detachEvent('on'+type,handler);
+            }else{
+                target['on'+type] = null;
+            }
+        },
+        // 阻止事件传播
+        stopPropagation:function(event){
+            if(event.stopPropagation){
+                event.stopPropagation();
+            }else{
+                event.cancelBubble = true;
+            }
+        },
+        // 取消事件默认行为
+        preventDefault:function(event){
+            if(event.preventDefault){
+                event.preventDefault();
+            }else{
+                event.returnValue = false;
+            }
+        },
+        // 获取事件目标
+        getTarget:function(event){
+            return event.target || event.srcElement;
+        },
+        // 获取事件对象的引用
+        getEvent:function(event){
+            var event = event || window.event;
+            if(!event){
+                // caller用于在函数内部获取调用getEvent的函数
+                var c = this.getEvent.caller;
+                while(c){
+                    event = c.arguments[0];
+                    if(event && Event == event.constructor){
+                        break;
+                    }
+                    c = c.caller;
+                }
+            }
+            return event;
         }        
-    }
-
-    return {
-        Helper:Helper
     }
 })
 
