@@ -1,5 +1,23 @@
-define(function(){
-    return {
+(function(self) {
+    function _createAssigner(keyFunc) {
+        return function(obj) {
+            var len = arguments.length;
+            if (len < 2 || obj === null) return obj;
+            for (var i = 1; i < len; i++) {
+                var source = arguments[i];
+                var keys = keyFunc(source);
+                var l = keys.length;
+                for (var j = 0; j < l; j++) {
+                    var key = keys[j];
+                    if (obj[key] === undefined) {
+                        obj[key] = source[key];
+                    }
+                }
+            }
+            return obj;
+        }
+    }
+    var _ = {
         text : function(e){
             var t="";
             e=e.childNodes||e;
@@ -202,9 +220,27 @@ define(function(){
                 }
             }
             return event;
-        }        
+        },
+        isObject: function(obj) {
+            var type = typeof obj;
+            return type === 'function' || type === 'object' && !!type;
+        },
+        keys: function(obj) {
+            var keys = [];
+            if (!this.isObject(obj)) return;
+            if (Object.keys) return Object.keys(obj);
+            for (var i in obj) {
+                if (obj.hasOwnProperty(i)) {
+                    keys.push(i);
+                }
+            }
+            return keys;
+        },
+        extend: _createAssigner(this.keys),
     }
-})
+
+    self.Util = _;
+})(this)
 
 
 
