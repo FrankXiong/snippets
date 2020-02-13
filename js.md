@@ -28,6 +28,19 @@ function debounce(fn, wait) {
 }
 ```
 
+## once
+
+```js
+const once = fn => {
+  let called = false;
+  return function(...args) {
+    if (called) return;
+    called = true;
+    return fn.apply(this, args);
+  };
+};
+```
+
 ## 柯里化
 
 ```js
@@ -179,22 +192,29 @@ function getPropSafely(path, obj, defaultValue = null) {
 }
 ```
 
-## 解析参数字符串
+## 解析 URL 参数字符串
 
 ```js
-function parseQuery(query) {
-  if (typeof query !== 'string') {
-    return;
-  }
+const getURLParameters = url =>
+  (url.match(/([^?=&]+)(=([^&]*))/g) || []).reduce(
+    (a, v) => (
+      (a[v.slice(0, v.indexOf('='))] = v.slice(v.indexOf('=') + 1)), a
+    ),
+    {}
+  );
+```
 
-  let kv;
+## 解析 Cookie
 
-  return query.split('&').reduce((obj, item) => {
-    kv = item.split('=');
-    obj[kv[0]] = kv[1];
-    return obj;
-  }, {});
-}
+```js
+const parseCookie = str =>
+  str
+    .split(';')
+    .map(v => v.split('='))
+    .reduce((acc, v) => {
+      acc[decodeURIComponent(v[0].trim())] = decodeURIComponent(v[1].trim());
+      return acc;
+    }, {});
 ```
 
 ## 根据经纬度计算距离
